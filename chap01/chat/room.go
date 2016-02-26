@@ -18,3 +18,29 @@ type room struct {
   clients map[*client]bool
 }
 
+func (r *room) run() {
+  for {
+    select {
+    case client := <-r.join:
+      // 参加 Join
+      r.clients[client] = true
+    case client := <-r.leave:
+      // 退室 Leave
+      delete(r.clients, client)
+      close(client.send)
+    case msg := <-r.forward:
+      // すべてのクライアントにメッセージを送信 Send message to All Clients.
+      for client := range r.clients {
+        select {
+	case client.send <- msg:
+	  // メッセージを送信 Message send
+	default:
+	  // 送信に失敗
+	  delete(r.clients, client)
+	  close(client.send)
+	}
+      }
+    }
+  }
+}
+
