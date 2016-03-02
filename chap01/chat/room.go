@@ -24,6 +24,17 @@ type room struct {
   clients map[*client]bool
 }
 
+// newRoom はすぐに利用できるチャットルームを生成して返します。
+// newRoom  generates available Chat Room and returns it.
+func newRoom() *room {
+  return &room{
+    forward: make(chan []byte),
+    join: make(chan *client),
+    leave: make(chan *client),
+    clients: make(map[*client]bool),
+  }
+}
+
 func (r *room) run() {
   for {
     select {
